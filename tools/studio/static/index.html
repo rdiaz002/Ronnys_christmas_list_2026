@@ -1,0 +1,172 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Gift Studio</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎁</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/studio.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>Gift Studio</h1>
+      <p class="sub">Turn a photo into a 3D gift for the tree</p>
+    </div>
+    <div class="top-right">
+      <span id="model-status" class="pill pill-loading">Starting up…</span>
+      <a id="site-link" class="ghost-btn" href="http://localhost:8087/" target="_blank" rel="noopener">Open the list ↗</a>
+    </div>
+  </header>
+
+  <main class="layout">
+    <form id="make-form" class="panel">
+      <section class="step">
+        <h2><span class="num">1</span> Which gift?</h2>
+        <select id="gift-select" aria-label="Gift"></select>
+        <div id="new-gift" class="new-gift">
+          <label>Name <input id="ng-name" type="text" maxlength="120" placeholder="e.g. Noise-Cancelling Headphones"></label>
+          <label>Note <input id="ng-note" type="text" maxlength="400" placeholder="Colour, size, why you want it…"></label>
+          <div class="row">
+            <label>Price <input id="ng-price" type="text" maxlength="40" placeholder="~$50"></label>
+            <label>Priority
+              <select id="ng-priority">
+                <option value="high">★ Top wish</option>
+                <option value="medium" selected>Normal</option>
+                <option value="low">Nice to have</option>
+              </select>
+            </label>
+          </div>
+          <div class="links">
+            <span class="label-text">Where to buy</span>
+            <div id="ng-links"></div>
+            <button type="button" id="add-link" class="text-btn">+ Add a link</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="step">
+        <h2><span class="num">2</span> Photo</h2>
+        <label id="drop" class="drop">
+          <input id="photo" type="file" accept="image/*" hidden>
+          <img id="photo-preview" alt="" hidden>
+          <span id="drop-text">Drop a photo here or <u>browse</u></span>
+        </label>
+        <p class="tip">Best results: one object, plain background, whole thing in frame, shot a little from above. Store product photos work great.</p>
+      </section>
+
+      <details class="step settings">
+        <summary><h2><span class="num">3</span> Settings <small>(optional)</small></h2></summary>
+        <label>Background remover
+          <select id="s-seg">
+            <option value="birefnet-general-lite" selected>Smart (recommended)</option>
+            <option value="birefnet-general">Best (slower)</option>
+            <option value="u2net">Classic (fastest, may keep background)</option>
+          </select>
+          <small>If bits of background end up in the model, try "Best".</small>
+        </label>
+        <label>Object size in frame <output id="fr-out">0.85</output>
+          <input id="s-fr" type="range" min="0.5" max="1" step="0.05" value="0.85">
+          <small>Lower it if the model comes out squashed or cut off.</small>
+        </label>
+        <div class="row">
+          <label>Detail
+            <select id="s-res">
+              <option value="192">Low (faster)</option>
+              <option value="256" selected>Normal</option>
+              <option value="320">High (slower)</option>
+            </select>
+          </label>
+          <label>Triangles
+            <select id="s-faces">
+              <option value="20000">20k (smallest)</option>
+              <option value="40000" selected>40k</option>
+              <option value="80000">80k (sharpest)</option>
+            </select>
+          </label>
+        </div>
+        <div class="row">
+          <label>Texture
+            <select id="s-tex">
+              <option value="512">512 px</option>
+              <option value="1024" selected>1024 px</option>
+              <option value="2048">2048 px</option>
+            </select>
+          </label>
+          <label class="check"><input id="s-bake" type="checkbox" checked> Bake texture <small>(off = softer vertex colours)</small></label>
+        </div>
+        <label class="check"><input id="s-compress" type="checkbox" checked> Compress the model <small>(needs Node.js; skipped if missing)</small></label>
+      </details>
+
+      <button id="make-btn" class="primary" type="submit">✨ Make it 3D</button>
+      <p id="form-error" class="error" hidden></p>
+    </form>
+
+    <section class="panel result" id="result-panel">
+      <div id="empty" class="empty">
+        <div class="empty-icon">🎄</div>
+        <p>Your 3D gift will show up here.</p>
+        <p class="muted">On a CPU it takes a minute or two per photo.</p>
+      </div>
+
+      <div id="progress" hidden>
+        <h2 id="progress-title">Working on it…</h2>
+        <ol id="stages" class="stages"></ol>
+        <p id="elapsed" class="muted"></p>
+        <figure id="early-cutout" class="early-cutout" hidden>
+          <img alt="Cut-out of the photo">
+          <figcaption>The cut-out it's working from. If background is left in it, try another photo or the "Best" background remover.</figcaption>
+        </figure>
+      </div>
+
+      <div id="done" hidden>
+        <div class="viewer-wrap">
+          <canvas id="viewer"></canvas>
+          <img id="cutout" class="cutout" alt="Cut-out photo">
+        </div>
+        <p id="stats" class="muted stats"></p>
+        <div class="rotate">
+          <span>Lying on its side? Rotate it:</span>
+          <button type="button" class="chip" data-axis="0">↻ X</button>
+          <button type="button" class="chip" data-axis="1">↻ Y</button>
+          <button type="button" class="chip" data-axis="2">↻ Z</button>
+          <button type="button" class="chip" id="rot-reset">Reset</button>
+        </div>
+        <label class="check"><input id="use-cutout" type="checkbox" checked> Use the cut-out as the gift's photo</label>
+        <div class="actions">
+          <button id="save-btn" class="primary" type="button">🎁 Save to list</button>
+          <button id="retry-btn" class="ghost-btn" type="button">Try different settings</button>
+        </div>
+        <p id="save-msg" class="success" hidden></p>
+      </div>
+
+      <div id="failed" hidden>
+        <h2>That didn't work</h2>
+        <p id="fail-msg" class="error"></p>
+        <p class="muted">Try a clearer photo with a plain background, or lower "Object size in frame".</p>
+      </div>
+    </section>
+  </main>
+
+  <template id="link-row">
+    <div class="link-row">
+      <input class="l-label" type="text" placeholder="Store" maxlength="40">
+      <input class="l-url" type="url" placeholder="https://…">
+      <button type="button" class="icon-btn" aria-label="Remove link">×</button>
+    </div>
+  </template>
+
+  <script type="module" src="/static/studio.js"></script>
+</body>
+</html>

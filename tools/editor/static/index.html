@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>List Editor</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📝</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/editor.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <header class="top">
+    <div>
+      <h1>List Editor</h1>
+      <p class="sub">Edit the wish list, then commit and push to publish</p>
+    </div>
+    <div class="top-right">
+      <span id="save-state" class="pill">Loading…</span>
+      <a id="studio-link" class="ghost-btn" href="http://localhost:8081/" target="_blank" rel="noopener">🎁 Gift Studio ↗</a>
+      <a id="site-link" class="ghost-btn" href="http://localhost:8087/" target="_blank" rel="noopener">🎄 View tree ↗</a>
+      <button id="save-btn" class="primary" type="button" disabled>Save</button>
+    </div>
+  </header>
+
+  <div id="banner" class="banner" hidden></div>
+
+  <main class="layout">
+    <aside class="panel sidebar">
+      <section class="list-settings">
+        <label>Page title <input id="title" type="text" maxlength="120"></label>
+        <label>Subtitle <input id="subtitle" type="text" maxlength="120" placeholder="e.g. 2026 Edition"></label>
+      </section>
+      <div class="list-head">
+        <h2>Gifts <span id="count" class="muted"></span></h2>
+        <button id="add-btn" class="text-btn" type="button">+ Add gift</button>
+      </div>
+      <p class="muted hint">Drag to reorder. Top wishes always sit up front under the tree.</p>
+      <ol id="gift-list" class="gift-list"></ol>
+    </aside>
+
+    <section class="panel editor" id="editor">
+      <div id="empty" class="empty">
+        <div class="empty-icon">🎄</div>
+        <p>Pick a gift on the left, or add a new one.</p>
+      </div>
+
+      <form id="form" hidden autocomplete="off">
+        <div class="form-head">
+          <h2 id="form-title">Gift</h2>
+          <div class="form-actions">
+            <button type="button" class="chip" id="move-up" title="Move up">↑</button>
+            <button type="button" class="chip" id="move-down" title="Move down">↓</button>
+            <button type="button" class="chip" id="duplicate">Duplicate</button>
+            <button type="button" class="chip danger" id="delete">Delete</button>
+          </div>
+        </div>
+
+        <div class="grid">
+          <div class="col">
+            <label>Name <span class="req">required</span>
+              <input id="f-name" type="text" maxlength="120" required>
+            </label>
+            <label>Note
+              <textarea id="f-note" rows="3" maxlength="600" placeholder="Colour, size, why you want it…"></textarea>
+            </label>
+            <div class="row">
+              <label>Price <input id="f-price" type="text" maxlength="40" placeholder="~$50"></label>
+              <fieldset class="priority">
+                <legend>Priority</legend>
+                <label><input type="radio" name="priority" value="high"> ★ Top wish</label>
+                <label><input type="radio" name="priority" value="medium"> Normal</label>
+                <label><input type="radio" name="priority" value="low"> Nice to have</label>
+              </fieldset>
+            </div>
+
+            <div class="block">
+              <span class="label-text">Where to buy</span>
+              <div id="links"></div>
+              <button type="button" id="add-link" class="text-btn">+ Add a link</button>
+            </div>
+
+            <details class="block wrapping">
+              <summary><span class="label-text">Wrapping paper</span> <small class="muted">(for gifts without a 3D model)</small></summary>
+              <div class="row">
+                <label>Pattern
+                  <select id="f-wrap">
+                    <option value="">Random</option>
+                    <option value="stripes">Stripes</option>
+                    <option value="dots">Dots</option>
+                    <option value="stars">Stars</option>
+                    <option value="plaid">Plaid</option>
+                    <option value="plain">Plain</option>
+                  </select>
+                </label>
+                <div class="colors">
+                  <label class="color"><span>Paper</span><input id="f-color" type="color"><button type="button" class="tiny" data-clear="f-color">auto</button></label>
+                  <label class="color"><span>Pattern</span><input id="f-accent" type="color"><button type="button" class="tiny" data-clear="f-accent">auto</button></label>
+                  <label class="color"><span>Ribbon</span><input id="f-ribbon" type="color"><button type="button" class="tiny" data-clear="f-ribbon">auto</button></label>
+                </div>
+              </div>
+            </details>
+          </div>
+
+          <div class="col">
+            <div class="block">
+              <span class="label-text">3D model</span>
+              <select id="f-model"></select>
+              <div class="viewer-wrap" id="viewer-wrap" hidden>
+                <canvas id="viewer"></canvas>
+              </div>
+              <div class="rotate" id="rotate" hidden>
+                <span>Rotate:</span>
+                <button type="button" class="chip" data-axis="0">↻ X</button>
+                <button type="button" class="chip" data-axis="1">↻ Y</button>
+                <button type="button" class="chip" data-axis="2">↻ Z</button>
+                <button type="button" class="chip" id="rot-reset">Reset</button>
+              </div>
+              <p class="muted small">Make a new model from a photo in <a id="studio-link-2" href="http://localhost:8081/" target="_blank" rel="noopener">Gift Studio ↗</a>.</p>
+            </div>
+
+            <div class="block">
+              <span class="label-text">Photo <small class="muted">(shown on the gift's card)</small></span>
+              <div class="photo-row">
+                <img id="photo-preview" class="photo-preview" alt="" hidden>
+                <div class="photo-controls">
+                  <select id="f-image"></select>
+                  <label class="ghost-btn upload">Upload a photo…<input id="photo-upload" type="file" accept="image/png,image/jpeg,image/webp,image/gif" hidden></label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </form>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" hidden></div>
+
+  <template id="link-row">
+    <div class="link-row">
+      <input class="l-label" type="text" placeholder="Store" maxlength="40">
+      <input class="l-url" type="url" placeholder="https://…">
+      <a class="icon-btn l-open" target="_blank" rel="noopener" title="Open link">↗</a>
+      <button type="button" class="icon-btn l-remove" aria-label="Remove link">×</button>
+    </div>
+  </template>
+
+  <script type="module" src="/static/editor.js"></script>
+</body>
+</html>

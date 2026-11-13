@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>My Christmas List</title>
+  <meta name="description" content="My Christmas wish list, under a 3D tree.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@700&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+</head>
+<body>
+  <canvas id="scene" aria-label="A 3D Christmas tree with wrapped gifts underneath"></canvas>
+
+  <header class="topbar">
+    <h1 id="title">My Christmas List</h1>
+    <p id="subtitle" class="subtitle"></p>
+    <div id="countdown" class="countdown" aria-live="off"></div>
+  </header>
+
+  <button id="list-toggle" class="list-toggle" type="button" aria-expanded="false" aria-controls="list-panel">
+    🎁 <span>View list</span>
+  </button>
+
+  <aside id="list-panel" class="list-panel" hidden>
+    <div class="list-head">
+      <h2>The list</h2>
+      <button class="icon-btn" id="list-close" type="button" aria-label="Close list">×</button>
+    </div>
+    <ul id="gift-list" class="gift-list"></ul>
+  </aside>
+
+  <div id="tooltip" class="tooltip" hidden></div>
+
+  <section id="card" class="card" role="dialog" aria-labelledby="card-name" hidden>
+    <button class="icon-btn card-close" type="button" aria-label="Close">×</button>
+    <div class="card-priority"></div>
+    <h2 id="card-name" class="card-name"></h2>
+    <img class="card-image" alt="" hidden>
+    <p class="card-note"></p>
+    <p class="card-price"></p>
+    <div class="card-links"></div>
+  </section>
+
+  <div id="hint" class="hint">Drag to look around · tap a gift to see what it is</div>
+  <div id="loading" class="loading"><span>Decorating the tree…</span></div>
+
+  <noscript><p class="noscript">This list needs JavaScript to show the tree. 🎄</p></noscript>
+  <script type="module" src="js/main.js"></script>
+</body>
+</html>

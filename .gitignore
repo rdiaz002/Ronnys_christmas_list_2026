@@ -1,0 +1,6 @@
+# Gift Studio local files
+tools/studio/.venv/
+tools/studio/vendor/
+tools/studio/work/
+__pycache__/
+gifts.json.bak

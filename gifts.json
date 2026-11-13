@@ -1,0 +1,92 @@
+{
+  "title": "Ronny's Christmas List",
+  "subtitle": "2026 Edition",
+  "gifts": [
+    {
+      "name": "Porsche Taycan",
+      "note": "I'll take whatever I can get 😉",
+      "price": "$111,900",
+      "priority": "high",
+      "links": [
+        {
+          "label": "Porsche",
+          "url": "https://www.porsche.com/usa/models/taycan/taycan-models/taycan/"
+        }
+      ],
+      "model": "models/porsche-taycan.glb",
+      "image": "photos/porsche-taycan.png"
+    },
+    {
+      "name": "Pixel Buds 2 Pro",
+      "note": "Darkest color",
+      "price": "$229",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Google",
+          "url": "https://store.google.com/product/pixel_buds_pro_2?hl=en-US&srsltid=AYCX9vLMTv5oseDNT92Z9m7dToosUd_dMykWKYqbhslVBlSHZsgWUrvr"
+        }
+      ],
+      "model": "models/pixel-buds-2-pro.glb",
+      "image": "photos/pixel-buds-2-pro.png"
+    },
+    {
+      "name": "Elemental Cube Set",
+      "price": "$399.99",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "MTS",
+          "url": "https://www.tungsten.com/products/element-1-cube-set-tungsten-copper-titanium-aluminum-magnesium"
+        }
+      ],
+      "model": "models/elemental-cube-set.glb",
+      "image": "photos/elemental-cube-set.png"
+    },
+    {
+      "name": "Wireless Charger",
+      "price": "$89.99",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Anker",
+          "url": "https://www.anker.com/products/a25m4?variant=44520888336534&utm_source=google&utm_medium=display&utm_content=wirelessfeed&utm_campaign=us_anker_wireless_m3_google-shopping_alwayson_allpn_purchase_ost_shopping_external_wirelessfeed&utm_term=23788455988_199403140001_806521096277&gad_source=1&gad_campaignid=23788455988&gbraid=0AAAAADbnO26Y_yOlbyQNughjtX7RqSu6l&gclid=Cj0KCQiA5NXXBhDEARIsABAJhdJZmlcTmbXr6XsgVQuWtXxLbzgP_-ccd-H58MOHS0FEjPJG5-au1KgaAgr5EALw_wcB"
+        }
+      ],
+      "model": "models/wireless-charger.glb",
+      "image": "photos/wireless-charger.png"
+    },
+    {
+      "name": "Merlins Guide to the Universe",
+      "note": "Hard cover",
+      "price": "$19.17",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Amazon",
+          "url": "https://a.co/d/08MCd1q7"
+        }
+      ],
+      "model": "models/merlins-guide-to-the-universe.glb",
+      "image": "photos/merlins-guide-to-the-universe.png"
+    },
+    {
+      "name": "🤑 Money",
+      "note": "Straight to my Venmo or Cashapp",
+      "price": "You choose 🤠",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "CashApp",
+          "url": "https://cash.app/$RonuelDiaz"
+        },
+        {
+          "label": "Venmo",
+          "url": "https://venmo.com/code?user_id=2543296291274752100&created=1794544307"
+        }
+      ],
+      "model": "models/money.glb",
+      "image": "photos/money.png"
+    }
+  ]
+}
