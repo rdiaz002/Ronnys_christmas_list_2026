@@ -100,6 +100,47 @@
       ],
       "model": "models/flipper-zero.glb",
       "image": "photos/flipper-zero.png"
+    },
+    {
+      "name": "Miyoo Mini Plus",
+      "note": "Black",
+      "price": "59.90",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Miyoo",
+          "url": "https://lomiyoo.com/products/miyoo-mini-plus?variant=46825094938873&srsltid=AYCX9vJfi3l1AhtVoKC8ucfkIeUWor6kObIOzJjBjX4lhrsIKFWSx5XnSt0"
+        }
+      ],
+      "model": "models/miyoo-mini-plus.glb",
+      "image": "photos/miyoo-mini-plus.png"
+    },
+    {
+      "name": "Book: Count down to zero day",
+      "price": "$20",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Barnes and Noble",
+          "url": "https://www.barnesandnoble.com/w/countdown-to-zero-day-kim-zetter/1116864204?ean=9780770436193"
+        }
+      ],
+      "model": "models/book-count-down-to-zero-day.glb",
+      "image": "photos/book-count-down-to-zero-day.png"
+    },
+    {
+      "name": "Shifter Knob for Rav4",
+      "note": "Black leather",
+      "price": "$23",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Amazon",
+          "url": "https://a.co/d/08YFe1Pn"
+        }
+      ],
+      "model": "models/shifter-knob-for-rav4.glb",
+      "image": "photos/shifter-knob-for-rav4.png"
     }
   ]
 }
