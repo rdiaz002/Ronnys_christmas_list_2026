@@ -11,6 +11,7 @@ import { GiftPile } from './gifts.js';
 import { initUI } from './ui.js';
 import { festiveLevel } from './season.js';
 import { ReindeerHerd } from './reindeer.js';
+import { hoHoHo } from './santa.js';
 import { easeInOut } from './util.js';
 
 const ui = initUI();
@@ -72,20 +73,54 @@ async function main() {
   controls.autoRotate = true;
   controls.autoRotateSpeed = 0.35;
 
+  const header = document.querySelector('.topbar');
+  const probe = new THREE.PerspectiveCamera();
+  const treeTop = new THREE.Vector3();
+
   function overviewPose(azimuth = 0) {
     const aspect = window.innerWidth / window.innerHeight;
     const halfFov = THREE.MathUtils.degToRad(camera.fov / 2);
     const halfHFov = Math.atan(Math.tan(halfFov) * aspect);
-    const dist = Math.max(tree.height * 1.45, pile.outerRadius / Math.tan(halfHFov));
-    const target = new THREE.Vector3(0, tree.height * 0.36, 0);
     const elev = 0.2;
-    const position = target.clone().add(new THREE.Vector3(
+    const offset = (dist) => new THREE.Vector3(
       Math.sin(azimuth) * Math.cos(elev) * dist,
       Math.sin(elev) * dist,
       Math.cos(azimuth) * Math.cos(elev) * dist,
-    ));
+    );
+    // Fit the whole tree between the title and the controls at the bottom: the star just under
+    // the title, the front presents above the bottom edge. Closest camera that manages both wins.
+    const topLimit = 1 - 2 * ((header.getBoundingClientRect().bottom + 12) / window.innerHeight);
+    const bottomLimit = -0.75;
+    probe.fov = camera.fov;
+    probe.aspect = aspect;
+    probe.updateProjectionMatrix();
+    treeTop.set(0, tree.height, 0);
+    const front = new THREE.Vector3(Math.sin(azimuth), 0, Math.cos(azimuth)).multiplyScalar(pile.outerRadius);
+    const screenY = (point, dist, targetY) => {
+      probe.position.set(0, targetY, 0).add(offset(dist));
+      probe.lookAt(0, targetY, 0);
+      probe.updateMatrixWorld();
+      return point.clone().project(probe).y;
+    };
+    const minDist = Math.max(tree.height * 1.2, pile.outerRadius / Math.tan(halfHFov));
+    let dist = minDist;
+    let targetY = tree.height * 0.36;
+    for (let i = 0; i < 40; i++, dist *= 1.04) {
+      // Aim so the star lands exactly at the top limit (aiming higher pushes it down the screen)...
+      let lo = 0;
+      let hi = tree.height;
+      for (let j = 0; j < 20; j++) {
+        const mid = (lo + hi) / 2;
+        if (screenY(treeTop, dist, mid) > topLimit) lo = mid;
+        else hi = mid;
+      }
+      targetY = (lo + hi) / 2;
+      // ...and accept the first distance where the front presents are still on screen.
+      if (screenY(front, dist, targetY) >= bottomLimit) break;
+    }
+    const target = new THREE.Vector3(0, targetY, 0);
     controls.maxDistance = dist * 1.6;
-    return { position, target };
+    return { position: target.clone().add(offset(dist)), target };
   }
 
   const start = overviewPose();
@@ -163,10 +198,48 @@ async function main() {
   // Pointer picking: tap/click opens a present, hover shows its name.
   const raycaster = new THREE.Raycaster();
   const ndc = new THREE.Vector2();
-  function pickAt(x, y) {
+  function aim(x, y) {
     ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
+  }
+  function pickAt(x, y) {
+    aim(x, y);
     return pile.pick(raycaster);
+  }
+  function starAt(x, y) {
+    aim(x, y);
+    return raycaster.intersectObject(tree.starHit, false).length > 0;
+  }
+
+  // Easter egg: the star laughs, and a speech bubble follows along with what's being said.
+  const bubble = document.getElementById('hohoho');
+  const bubbleText = bubble.querySelector('span');
+  let bubbleTimers = [];
+  function restart(el, cls) {
+    el.classList.remove(cls);
+    void el.offsetWidth; // restart the CSS animation
+    el.classList.add(cls);
+  }
+  async function santa() {
+    tree.celebrate();
+    const p = tree.star.getWorldPosition(new THREE.Vector3()).project(camera);
+    bubble.style.left = `${((p.x + 1) / 2) * window.innerWidth}px`;
+    bubble.style.top = `${((1 - p.y) / 2) * window.innerHeight}px`;
+    bubbleTimers.forEach(clearTimeout);
+    bubbleText.textContent = 'Ho Ho Ho! 🎅';
+    bubble.classList.remove('hide');
+    restart(bubble, 'show');
+    const later = (ms, fn) => bubbleTimers.push(setTimeout(fn, ms));
+    // The recording laughs for ~2 s, then says "Merry Christmas!"; the synthesised fallback only laughs.
+    if ((await hoHoHo()) === 'clip') {
+      later(2000, () => {
+        bubbleText.textContent = 'Merry Christmas! 🎄';
+        restart(bubbleText, 'swap');
+      });
+      later(4100, () => bubble.classList.add('hide'));
+    } else {
+      later(1900, () => bubble.classList.add('hide'));
+    }
   }
 
   let down = null;
@@ -177,6 +250,7 @@ async function main() {
     const quick = performance.now() - down.t < 500;
     down = null;
     if (moved > 6 || !quick || flight) return;
+    if (starAt(e.clientX, e.clientY)) return santa();
     const gift = pickAt(e.clientX, e.clientY);
     if (gift) openGift(gift);
     else closeGift();
@@ -194,7 +268,7 @@ async function main() {
     const e = hoverEvent;
     hoverEvent = null;
     const gift = down ? null : pickAt(e.clientX, e.clientY);
-    canvas.style.cursor = gift ? 'pointer' : 'grab';
+    canvas.style.cursor = gift || (!down && starAt(e.clientX, e.clientY)) ? 'pointer' : 'grab';
     pile.setHover(gift && gift !== selected ? gift : null);
     if (gift && gift !== selected) ui.showTooltip(gift.item.name, e.clientX, e.clientY);
     else ui.hideTooltip();

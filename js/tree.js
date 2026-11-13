@@ -244,6 +244,12 @@ export function createTree({ scale = 1, envMap, festive = 1 }) {
   const starLight = new THREE.PointLight(0xffd27a, 4, 6, 1.5);
   starLight.position.copy(star.position);
   group.add(starLight);
+  // A bigger, invisible target so the star is easy to tap (it hides an easter egg, see main.js).
+  const starHit = new THREE.Mesh(new THREE.SphereGeometry(0.6, 12, 8), new THREE.MeshBasicMaterial());
+  starHit.visible = false;
+  starHit.position.copy(star.position);
+  group.add(starHit);
+  let celebration = -1; // seconds since the star was clicked, or -1
 
   // Warm glow from the lights spilling onto the presents.
   const glowBase = lerp(4, 7, festive);
@@ -258,7 +264,14 @@ export function createTree({ scale = 1, envMap, festive = 1 }) {
   group.scale.setScalar(scale);
 
   const tmp = new THREE.Color();
+  function celebrate() {
+    celebration = 0;
+  }
+
+  let lastT = 0;
   function update(t) {
+    const dt = t - lastT;
+    lastT = t;
     for (let i = 0; i < bulbs.count; i++) {
       const w = 0.5 + 0.5 * Math.sin(t * bulbSpeed[i] + bulbPhase[i]);
       bulbs.setColorAt(i, tmp.copy(bulbBase[i]).multiplyScalar(1.4 + 2.6 * w * w));
@@ -266,8 +279,23 @@ export function createTree({ scale = 1, envMap, festive = 1 }) {
     bulbs.instanceColor.needsUpdate = true;
     star.rotation.y = Math.sin(t * 0.4) * 0.5;
     starLight.intensity = (starGlow / 2.4) * (4 + Math.sin(t * 2.3) * 0.6);
+    if (celebration >= 0) {
+      // Two fast spins with a bright flare that fades out over ~2 s.
+      celebration += dt;
+      const k = Math.min(celebration / 2, 1);
+      const flare = Math.sin(Math.PI * k);
+      star.rotation.y += (1 - (1 - k) ** 3) * Math.PI * 4;
+      star.scale.setScalar(1 + 0.45 * flare);
+      star.material.emissiveIntensity = starGlow + 3 * flare;
+      starLight.intensity += 10 * flare;
+      if (k >= 1) {
+        celebration = -1;
+        star.scale.setScalar(1);
+        star.material.emissiveIntensity = starGlow;
+      }
+    }
     glows.forEach((g, i) => { g.intensity = glowBase + Math.sin(t * 3.1 + i * 2) * 0.6 + Math.sin(t * 7.3 + i) * 0.3; });
   }
 
-  return { group, height: (TREE_TOP + 0.6) * scale, update };
+  return { group, height: (TREE_TOP + 0.6) * scale, update, star, starHit, celebrate };
 }

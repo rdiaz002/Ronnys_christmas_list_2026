@@ -65,6 +65,8 @@ Preview with URL parameters (they combine with the ones above):
 - `?moon=0.5` sets the moon phase (0 = new, 0.25 = first quarter, 0.5 = full)
 - `?reindeer=now` sends the reindeer out straight away
 
+There's also a small easter egg: tap the star on top of the tree. It plays `sounds/hohoho.mp3`, "Ho Ho Ho, Merry Christmas!" by [Cloud-10 on Freesound](https://freesound.org/s/536245/) (CC0, public domain). Swap in any clip you're allowed to use; if the file is missing, the site synthesises a laugh instead.
+
 ## Turning a photo into a 3D model: Gift Studio
 
 A local page at **http://localhost:8081** where you upload a photo, preview the 3D model and save it into the list. Runs on the CPU, no GPU needed (about 40 s per photo on a 16-core machine).
@@ -119,6 +121,7 @@ js/main.js        renderer, camera, picking, glue
 js/world.js       sky, sun, moon, snow, ground, forest, lighting
 js/daytime.js     time-of-day sky colours and moon phase
 js/reindeer.js    the wandering reindeer
+js/santa.js       the star's easter-egg laugh
 js/tree.js        the tree (scales with the list, decorations follow the season)
 js/season.js      how festive today is (Nov 1 → Christmas Eve)
 js/gifts.js       presents, layout rings, unwrap animation, model loading
