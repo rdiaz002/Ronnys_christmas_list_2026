@@ -135,6 +135,7 @@ def parse_settings(raw: dict) -> dict:
         "bake_texture": bool(raw.get("bake_texture", True)),
         "compress": bool(raw.get("compress", True)),
         "segmenter": raw.get("segmenter") if raw.get("segmenter") in SEGMENTERS else SEGMENTERS[0],
+        "project_photo": bool(raw.get("project_photo", True)),
     }
 
 

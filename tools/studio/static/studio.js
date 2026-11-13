@@ -115,6 +115,7 @@ $('make-form').addEventListener('submit', async (e) => {
     bake_texture: $('s-bake').checked,
     compress: $('s-compress').checked,
     segmenter: $('s-seg').value,
+    project_photo: $('s-photo').checked,
   };
   const body = new FormData();
   body.append('photo', photoFile);

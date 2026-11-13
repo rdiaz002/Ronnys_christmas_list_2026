@@ -87,6 +87,19 @@
       ],
       "model": "models/money.glb",
       "image": "photos/money.png"
+    },
+    {
+      "name": "Flipper Zero",
+      "price": "$169",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "FlipperZero",
+          "url": "https://flipper.net/products/flipper-zero"
+        }
+      ],
+      "model": "models/flipper-zero.glb",
+      "image": "photos/flipper-zero.png"
     }
   ]
 }

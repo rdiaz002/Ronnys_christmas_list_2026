@@ -44,6 +44,7 @@ class Settings:
     bake_texture: bool = True       # False = per-vertex colours (softer, smaller)
     compress: bool = True           # Draco/WebP via gltf-transform, if Node.js is installed
     segmenter: str = SEGMENTERS[0]  # background remover, see SEGMENTERS
+    project_photo: bool = True      # paint the photo itself onto the parts of the model it shows
 
 
 def _install_mcubes_shim() -> None:
@@ -87,20 +88,17 @@ def _clean_cutout(img: Image.Image) -> Image.Image:
     return Image.fromarray(rgba)
 
 
-def _rasterize_positions(uvs: np.ndarray, faces: np.ndarray, verts: np.ndarray, size: int):
-    """For every texel covered by a UV triangle, the 3D surface point it maps to.
+def _triangle_pixels(pts: np.ndarray, faces: np.ndarray, size: int):
+    """For each triangle, the pixel centres it covers and their barycentric weights.
 
-    Row 0 is v=0 (OpenGL convention), matching TripoSR's own baker.
+    `pts` are vertex positions in pixel units (pixel centres on integer coordinates).
     """
-    pos = np.zeros((size, size, 3), np.float32)
-    mask = np.zeros((size, size), bool)
-    tri_uv = uvs[faces].astype(np.float64) * size - 0.5  # texel centres sit on integer coordinates
-    tri_p = verts[faces]
-    lo = np.clip(np.floor(tri_uv.min(axis=1)).astype(int), 0, size - 1)
-    hi = np.clip(np.ceil(tri_uv.max(axis=1)).astype(int), 0, size - 1)
+    tri = pts[faces].astype(np.float64)
+    lo = np.clip(np.floor(tri.min(axis=1)).astype(int), 0, size - 1)
+    hi = np.clip(np.ceil(tri.max(axis=1)).astype(int), 0, size - 1)
     eps = 1e-6
     for t in range(len(faces)):
-        (ax, ay), (bx, by), (cx, cy) = tri_uv[t]
+        (ax, ay), (bx, by), (cx, cy) = tri[t]
         det = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay)
         if abs(det) < 1e-12:
             continue
@@ -110,13 +108,113 @@ def _rasterize_positions(uvs: np.ndarray, faces: np.ndarray, verts: np.ndarray, 
         w2 = ((bx - ax) * py - (by - ay) * px) / det
         w0 = 1 - w1 - w2
         inside = (w0 >= -eps) & (w1 >= -eps) & (w2 >= -eps)
-        if not inside.any():
-            continue
-        p0, p1, p2 = tri_p[t]
-        w = np.stack([w0[inside], w1[inside], w2[inside]], axis=1)
-        pos[ys[inside], xs[inside]] = w @ np.stack([p0, p1, p2])
-        mask[ys[inside], xs[inside]] = True
-    return pos, mask
+        if inside.any():
+            yield t, ys[inside], xs[inside], np.stack([w0[inside], w1[inside], w2[inside]], axis=1)
+
+
+def _rasterize_uv(uvs: np.ndarray, faces: np.ndarray, values: np.ndarray, size: int):
+    """Interpolate per-vertex `values` (V×C) over the UV layout: one value per covered texel.
+
+    Row 0 is v=0 (OpenGL convention), matching TripoSR's own baker.
+    """
+    out = np.zeros((size, size, values.shape[1]), np.float32)
+    mask = np.zeros((size, size), bool)
+    for t, ys, xs, w in _triangle_pixels(uvs * size - 0.5, faces, size):
+        out[ys, xs] = w @ values[faces[t]]
+        mask[ys, xs] = True
+    return out, mask
+
+
+# TripoSR "sees" its input photo from a fixed camera: 1.9 units out along +X, looking at the origin,
+# Z up, 40° field of view, with the photo's right-hand side towards +Y.
+COND_DISTANCE = 1.9
+COND_FOCAL = 0.5 / np.tan(np.radians(20))
+
+
+def _project(points: np.ndarray, proj) -> tuple:
+    """Photo coordinates (0..1, top-left origin) and camera depth of 3D points."""
+    focal, du, dv = proj
+    depth = COND_DISTANCE - points[:, 0]
+    return 0.5 + focal * points[:, 1] / depth + du, 0.5 - focal * points[:, 2] / depth + dv, depth
+
+
+def _fit_projection(verts: np.ndarray, alpha: np.ndarray):
+    """Fine-tune the nominal camera so the mesh outline lines up with the photo's cut-out."""
+    from skimage.morphology import binary_dilation, disk
+
+    n = 128
+    target = np.asarray(Image.fromarray((alpha * 255).astype(np.uint8)).resize((n, n), Image.BILINEAR)) > 127
+    best = (-1.0, (COND_FOCAL, 0.0, 0.0))
+    for focal in COND_FOCAL * np.linspace(0.94, 1.06, 7):
+        for du in np.linspace(-0.02, 0.02, 5):
+            for dv in np.linspace(-0.02, 0.02, 5):
+                u, v, _ = _project(verts, (focal, du, dv))
+                sil = np.zeros((n, n), bool)
+                sil[np.clip((v * n).astype(int), 0, n - 1), np.clip((u * n).astype(int), 0, n - 1)] = True
+                sil = binary_dilation(sil, disk(1))
+                iou = (sil & target).sum() / max(1, (sil | target).sum())
+                if iou > best[0]:
+                    best = (iou, (focal, du, dv))
+    return best
+
+
+def _depth_buffer(verts: np.ndarray, faces: np.ndarray, proj, size: int = 512) -> np.ndarray:
+    """Distance to the nearest surface for each pixel, as seen from the photo's camera."""
+    u, v, depth = _project(verts, proj)
+    zbuf = np.full((size, size), np.inf, np.float32)
+    for t, ys, xs, w in _triangle_pixels(np.stack([u * size - 0.5, v * size - 0.5], axis=1), faces, size):
+        zbuf[ys, xs] = np.minimum(zbuf[ys, xs], w @ depth[faces[t]])
+    return zbuf
+
+
+def _sample(image: np.ndarray, u: np.ndarray, v: np.ndarray) -> np.ndarray:
+    """Bilinear lookup in an H×W×C float image at photo coordinates."""
+    h, w = image.shape[:2]
+    x = np.clip(u * w - 0.5, 0, w - 1.001)
+    y = np.clip(v * h - 0.5, 0, h - 1.001)
+    x0, y0 = x.astype(int), y.astype(int)
+    fx, fy = (x - x0)[:, None], (y - y0)[:, None]
+    top = image[y0, x0] * (1 - fx) + image[y0, x0 + 1] * fx
+    bottom = image[y0 + 1, x0] * (1 - fx) + image[y0 + 1, x0 + 1] * fx
+    return top * (1 - fy) + bottom * fy
+
+
+def _photo_colors(points: np.ndarray, normals: np.ndarray, photo: np.ndarray, proj, zbuf: np.ndarray):
+    """Colours read straight from the photo, and how much to trust each (0 where the photo didn't see it)."""
+    u, v, depth = _project(points, proj)
+    rgba = _sample(photo, u, v)
+    n = zbuf.shape[0]
+    nearest = zbuf[np.clip((v * n).astype(int), 0, n - 1), np.clip((u * n).astype(int), 0, n - 1)]
+    visible = depth <= nearest + 0.03
+    to_cam = np.array([COND_DISTANCE, 0, 0]) - points
+    to_cam /= np.linalg.norm(to_cam, axis=1, keepdims=True) + 1e-9
+    facing = np.einsum("ij,ij->i", normals, to_cam)
+    # Fade out towards grazing angles, where the photo gets smeared across the surface.
+    weight = np.clip((facing - 0.3) / 0.3, 0, 1) * visible * np.clip(rgba[:, 3], 0, 1) ** 2
+    return rgba[:, :3], weight
+
+
+def _match_to_photo(colors: np.ndarray, photo: np.ndarray, weight: np.ndarray, strength: float = 0.5) -> np.ndarray:
+    """Nudge TripoSR's colours toward the photo where both exist, so the unseen sides sit closer to the front.
+
+    Kept gentle: one correction for the whole object can't tell a white body from black tyres.
+    """
+    sel = weight > 0.6
+    if sel.sum() < 200:
+        return colors
+    out = colors.copy()
+    for c in range(3):
+        x, y = colors[sel, c], photo[sel, c]
+        gain = np.clip(np.cov(x, y)[0, 1] / max(np.var(x), 1e-6), 0.8, 1.3)
+        fitted = (colors[:, c] - x.mean()) * gain + y.mean()
+        out[:, c] = colors[:, c] + (fitted - colors[:, c]) * strength
+    return np.clip(out, 0, 1)
+
+
+def _blend_with_photo(colors, points, normals, photo, proj, zbuf):
+    photo_rgb, weight = _photo_colors(points, normals, photo, proj, zbuf)
+    colors = _match_to_photo(colors, photo_rgb, weight)
+    return colors * (1 - weight[:, None]) + photo_rgb * weight[:, None]
 
 
 def _dilate(colors: np.ndarray, mask: np.ndarray, iterations: int) -> np.ndarray:
@@ -234,6 +332,9 @@ class GiftModeler:
             mesh = trimesh.Trimesh(v, f, process=False)
         if mesh.volume < 0:  # make sure faces point outwards
             mesh.invert()
+        if settings.project_photo:
+            iou, proj = _fit_projection(mesh.vertices, rgba[..., 3])
+            zbuf = _depth_buffer(mesh.vertices, mesh.faces, proj)
         lap("mesh")
 
         # 4. Colour it.
@@ -249,9 +350,15 @@ class GiftModeler:
             atlas.generate(pack_options=pack)
             vmapping, indices, uvs = atlas[0]
             verts = mesh.vertices[vmapping]
-            pos, mask = _rasterize_positions(uvs, indices, verts, size)
+            normals = mesh.vertex_normals[vmapping]
+            texels, mask = _rasterize_uv(uvs, indices, np.hstack([verts, normals]), size)
+            pos, nrm = texels[mask][:, :3], texels[mask][:, 3:]
+            nrm /= np.linalg.norm(nrm, axis=1, keepdims=True) + 1e-9
+            texel_colors = self._query_colors(scene_code, pos)
+            if settings.project_photo:
+                texel_colors = _blend_with_photo(texel_colors, pos, nrm, rgba, proj, zbuf)
             colors = np.zeros((size, size, 3), np.float32)
-            colors[mask] = self._query_colors(scene_code, pos[mask])
+            colors[mask] = texel_colors
             colors = _dilate(colors, mask, pack.padding + 2)
             texture = Image.fromarray((np.clip(colors, 0, 1) * 255).astype(np.uint8)).transpose(Image.FLIP_TOP_BOTTOM)
             material = trimesh.visual.material.PBRMaterial(
@@ -261,6 +368,8 @@ class GiftModeler:
         else:
             progress("texture", "Colouring the mesh")
             rgb = np.clip(self._query_colors(scene_code, mesh.vertices.astype(np.float32)), 0, 1)
+            if settings.project_photo:
+                rgb = _blend_with_photo(rgb, mesh.vertices, mesh.vertex_normals, rgba, proj, zbuf)
             rgba = np.concatenate([rgb, np.ones((len(rgb), 1))], axis=1)
             mesh.visual = trimesh.visual.ColorVisuals(mesh, vertex_colors=(rgba * 255).astype(np.uint8))
         lap("texture")
@@ -313,9 +422,10 @@ def main() -> None:
     parser.add_argument("--vertex-colors", action="store_true", help="skip texture baking")
     parser.add_argument("--no-compress", action="store_true")
     parser.add_argument("--segmenter", choices=SEGMENTERS, default=SEGMENTERS[0])
+    parser.add_argument("--no-photo", action="store_true", help="use only TripoSR's own colours")
     args = parser.parse_args()
     settings = Settings(args.foreground_ratio, args.resolution, args.max_faces, args.texture_size,
-                        not args.vertex_colors, not args.no_compress, args.segmenter)
+                        not args.vertex_colors, not args.no_compress, args.segmenter, not args.no_photo)
     modeler = GiftModeler()
     result = modeler.make(args.photo, args.out, settings, progress=lambda stage, msg: print(f"[{stage}] {msg}"))
     print(result)

@@ -89,7 +89,7 @@ tools/studio/run.sh          # → http://localhost:8081
 4. **Save to list**. This copies the model to `models/`, the cut-out photo to `photos/`, and updates `gifts.json`.
 5. Check it under the tree on http://localhost:8087, then commit and push as usual.
 
-Under the hood: background removal (rembg with BiRefNet, plus clean-up of stray specks and smeared edges) → [TripoSR](https://github.com/VAST-AI-Research/TripoSR) image-to-3D → mesh clean-up and simplification → texture bake → optional Draco/WebP compression. TripoSR's compiled and OpenGL parts are swapped for pure-Python equivalents, so nothing needs compiling. There's also a command-line version: `tools/studio/.venv/bin/python tools/studio/pipeline.py photo.jpg --out somewhere/`.
+Under the hood: background removal (rembg with BiRefNet, plus clean-up of stray specks and smeared edges) → [TripoSR](https://github.com/VAST-AI-Research/TripoSR) image-to-3D → mesh clean-up and simplification → texture bake (the photo itself is projected onto the parts of the model it shows, so those keep the photo's sharpness and true colours; TripoSR's own, blurrier colours fill in the sides and back) → optional Draco/WebP compression. TripoSR's compiled and OpenGL parts are swapped for pure-Python equivalents, so nothing needs compiling. There's also a command-line version: `tools/studio/.venv/bin/python tools/studio/pipeline.py photo.jpg --out somewhere/`.
 
 Good photos make good models: one object, plain background, whole thing in frame, slightly from above. While it works, the studio shows the cut-out it is using. If background is left in it, switch **Settings → Background remover** to "Best". It's a single-photo guess at the back side, so expect "charming" rather than "photo-real".
 
