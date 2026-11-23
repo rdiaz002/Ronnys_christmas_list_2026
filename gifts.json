@@ -141,6 +141,20 @@
       ],
       "model": "models/shifter-knob-for-rav4.glb",
       "image": "photos/shifter-knob-for-rav4.png"
+    },
+    {
+      "name": "Birken Stock Slippers",
+      "note": "Thyme Tonal/Green",
+      "price": "$169.95",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Birken Stock",
+          "url": "https://www.birkenstock.com/us/boston-soft-footbed-suede-leather/boston-suede-suedeleather-softfootbed-eva-u_12205.html?dwvar_boston-suede-suedeleather-softfootbed-eva-u__46_width=S&dwvar_boston-suede-suedeleather-softfootbed-eva-u__46_size=240&utm_source=google&utm_medium=cpc&utm_campaign=PLA-US-GGL-B-Shoes-MBL-Standard-Conv&utm_term=conv&utm_content=4040714343648&gad_source=1&gad_campaignid=9432284340&gbraid=0AAAAADPjTNy5Db4dE6_yVPDcUD2hNURO3&gclid=Cj0KCQiA_P_XBhDvARIsALHjSUUUyOWW5i3eiN0SjcPyxiRJUGrpGI5SS8VhQaN33s1Rmv3YDR3suKIaAn0bEALw_wcB"
+        }
+      ],
+      "model": "models/birken-stock-slippers.glb",
+      "image": "photos/birken-stock-slippers.png"
     }
   ]
 }
