@@ -71,24 +71,6 @@
       "image": "photos/merlins-guide-to-the-universe.png"
     },
     {
-      "name": "🤑 Money",
-      "note": "Straight to my Venmo or Cashapp",
-      "price": "You choose 🤠",
-      "priority": "medium",
-      "links": [
-        {
-          "label": "CashApp",
-          "url": "https://cash.app/$RonuelDiaz"
-        },
-        {
-          "label": "Venmo",
-          "url": "https://venmo.com/code?user_id=2543296291274752100&created=1794544307"
-        }
-      ],
-      "model": "models/money.glb",
-      "image": "photos/money.png"
-    },
-    {
       "name": "Flipper Zero",
       "price": "$169",
       "priority": "medium",
@@ -144,7 +126,7 @@
     },
     {
       "name": "Birken Stock Slippers",
-      "note": "Thyme Tonal/Green",
+      "note": "Thyme Tonal/Green\nRegular/wide\nSize 9-9.5 for men",
       "price": "$169.95",
       "priority": "medium",
       "links": [
@@ -155,6 +137,24 @@
       ],
       "model": "models/birken-stock-slippers.glb",
       "image": "photos/birken-stock-slippers.png"
+    },
+    {
+      "name": "🤑 Money",
+      "note": "Straight to my Venmo or Cashapp",
+      "price": "You choose 🤠",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "CashApp",
+          "url": "https://cash.app/$RonuelDiaz"
+        },
+        {
+          "label": "Venmo",
+          "url": "https://venmo.com/code?user_id=2543296291274752100&created=1794544307"
+        }
+      ],
+      "model": "models/money.glb",
+      "image": "photos/money.png"
     }
   ]
 }
