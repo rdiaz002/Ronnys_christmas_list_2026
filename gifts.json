@@ -3,20 +3,6 @@
   "subtitle": "2026 Edition",
   "gifts": [
     {
-      "name": "Porsche Taycan",
-      "note": "I'll take whatever I can get 😉",
-      "price": "$111,900",
-      "priority": "high",
-      "links": [
-        {
-          "label": "Porsche",
-          "url": "https://www.porsche.com/usa/models/taycan/taycan-models/taycan/"
-        }
-      ],
-      "model": "models/porsche-taycan.glb",
-      "image": "photos/porsche-taycan.png"
-    },
-    {
       "name": "Pixel Buds 2 Pro",
       "note": "Darkest color",
       "price": "$229",
@@ -29,19 +15,6 @@
       ],
       "model": "models/pixel-buds-2-pro.glb",
       "image": "photos/pixel-buds-2-pro.png"
-    },
-    {
-      "name": "Elemental Cube Set",
-      "price": "$399.99",
-      "priority": "medium",
-      "links": [
-        {
-          "label": "MTS",
-          "url": "https://www.tungsten.com/products/element-1-cube-set-tungsten-copper-titanium-aluminum-magnesium"
-        }
-      ],
-      "model": "models/elemental-cube-set.glb",
-      "image": "photos/elemental-cube-set.png"
     },
     {
       "name": "Wireless Charger",
@@ -57,20 +30,6 @@
       "image": "photos/wireless-charger.png"
     },
     {
-      "name": "Merlins Guide to the Universe",
-      "note": "Hard cover",
-      "price": "$19.17",
-      "priority": "medium",
-      "links": [
-        {
-          "label": "Amazon",
-          "url": "https://a.co/d/08MCd1q7"
-        }
-      ],
-      "model": "models/merlins-guide-to-the-universe.glb",
-      "image": "photos/merlins-guide-to-the-universe.png"
-    },
-    {
       "name": "Flipper Zero",
       "price": "$169",
       "priority": "medium",
@@ -84,18 +43,46 @@
       "image": "photos/flipper-zero.png"
     },
     {
-      "name": "Miyoo Mini Plus",
-      "note": "Black",
-      "price": "59.90",
+      "name": "3D Printer Stand",
+      "note": "Color Black",
+      "price": "71.99",
       "priority": "medium",
       "links": [
         {
-          "label": "Miyoo",
-          "url": "https://lomiyoo.com/products/miyoo-mini-plus?variant=46825094938873&srsltid=AYCX9vJfi3l1AhtVoKC8ucfkIeUWor6kObIOzJjBjX4lhrsIKFWSx5XnSt0"
+          "label": "Amazon",
+          "url": "https://a.co/d/0eOaPdxm"
         }
       ],
-      "model": "models/miyoo-mini-plus.glb",
-      "image": "photos/miyoo-mini-plus.png"
+      "model": "models/3d-printer-stand.glb",
+      "image": "photos/3d-printer-stand.png"
+    },
+    {
+      "name": "Plant Stand",
+      "note": "4 Tier in Brown",
+      "price": "18.39",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Amazon",
+          "url": "https://a.co/d/0dvfaRbA"
+        }
+      ],
+      "model": "models/plant-stand.glb",
+      "image": "photos/plant-stand.png"
+    },
+    {
+      "name": "Merlins Guide to the Universe",
+      "note": "Hard cover",
+      "price": "$19.17",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Amazon",
+          "url": "https://a.co/d/08MCd1q7"
+        }
+      ],
+      "model": "models/merlins-guide-to-the-universe.glb",
+      "image": "photos/merlins-guide-to-the-universe.png"
     },
     {
       "name": "Book: Count down to zero day",
@@ -125,6 +112,20 @@
       "image": "photos/shifter-knob-for-rav4.png"
     },
     {
+      "name": "Miyoo Mini Plus",
+      "note": "Black",
+      "price": "59.90",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "Miyoo",
+          "url": "https://lomiyoo.com/products/miyoo-mini-plus?variant=46825094938873&srsltid=AYCX9vJfi3l1AhtVoKC8ucfkIeUWor6kObIOzJjBjX4lhrsIKFWSx5XnSt0"
+        }
+      ],
+      "model": "models/miyoo-mini-plus.glb",
+      "image": "photos/miyoo-mini-plus.png"
+    },
+    {
       "name": "Birken Stock Slippers",
       "note": "Thyme Tonal/Green\nRegular/wide\nSize 9-9.5 for men",
       "price": "$169.95",
@@ -137,6 +138,33 @@
       ],
       "model": "models/birken-stock-slippers.glb",
       "image": "photos/birken-stock-slippers.png"
+    },
+    {
+      "name": "Elemental Cube Set",
+      "price": "$399.99",
+      "priority": "medium",
+      "links": [
+        {
+          "label": "MTS",
+          "url": "https://www.tungsten.com/products/element-1-cube-set-tungsten-copper-titanium-aluminum-magnesium"
+        }
+      ],
+      "model": "models/elemental-cube-set.glb",
+      "image": "photos/elemental-cube-set.png"
+    },
+    {
+      "name": "Porsche Taycan",
+      "note": "I'll take whatever I can get 😉",
+      "price": "$111,900",
+      "priority": "high",
+      "links": [
+        {
+          "label": "Porsche",
+          "url": "https://www.porsche.com/usa/models/taycan/taycan-models/taycan/"
+        }
+      ],
+      "model": "models/porsche-taycan.glb",
+      "image": "photos/porsche-taycan.png"
     },
     {
       "name": "🤑 Money",
